@@ -115,10 +115,14 @@ import { getClientConfig } from "../config/client";
 import { useAllModels } from "../utils/hooks";
 import { MultimodalContent } from "../client/api";
 
-const localStorage = safeLocalStorage();
 import { ClientApi } from "../client/api";
 import { createTTSPlayer } from "../utils/audio";
 import { MsEdgeTTS, OUTPUT_FORMAT } from "../utils/ms_edge_tts";
+
+import { isEmpty } from "lodash-es";
+import { getModelProvider } from "../utils/model";
+
+const localStorage = safeLocalStorage();
 
 const ttsPlayer = createTTSPlayer();
 
@@ -642,7 +646,7 @@ export function ChatActions(props: {
           onClose={() => setShowModelSelector(false)}
           onSelection={(s) => {
             if (s.length === 0) return;
-            const [model, providerName] = s[0].split("@");
+            const [model, providerName] = getModelProvider(s[0]);
             chatStore.updateCurrentSession((session) => {
               session.mask.modelConfig.model = model as ModelType;
               session.mask.modelConfig.providerName =
@@ -1015,7 +1019,7 @@ function _Chat() {
   };
 
   const doSubmit = (userInput: string) => {
-    if (userInput.trim() === "") return;
+    if (userInput.trim() === "" && isEmpty(attachImages)) return;
     const matchCommand = chatCommands.match(userInput);
     if (matchCommand.matched) {
       setUserInput("");
@@ -1604,7 +1608,7 @@ function _Chat() {
               title={Locale.Chat.Actions.RefreshTitle}
               onClick={() => {
                 showToast(Locale.Chat.Actions.RefreshToast);
-                chatStore.summarizeSession(true);
+                chatStore.summarizeSession(true, session);
               }}
             />
           </div>
